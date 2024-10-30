@@ -1,11 +1,10 @@
-
 from aiohttp import web
 import numpy as np
 import io
 import aiohttp
 
-
-async def send_npy_file():
+async def send_npy_file(token):
+    print("UPLOAD")
     # Zufälliges NumPy-Array erstellen
     data_np = np.random.rand(100, 100)  # Erzeugt ein 100x100 Array mit Zufallswerten
 
@@ -14,9 +13,10 @@ async def send_npy_file():
     np.save(buffer, data_np)
     buffer.seek(0)  # Zurück zum Anfang des Puffers
 
-    # Header für den Request festlegen
+    # Header für den Request festlegen, einschließlich Authorization Header
     headers = {
-        'Content-Type': 'application/octet-stream'
+        'Content-Type': 'application/octet-stream',
+        'Authorization': f'Bearer {token}'  # Token wird als Bearer Token hinzugefügt
     }
 
     # Asynchrone HTTP-Session erstellen und POST-Request senden

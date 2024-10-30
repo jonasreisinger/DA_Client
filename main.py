@@ -1,21 +1,24 @@
 import tkinter as tk
 import asyncio
 import threading
-from send import send_npy_file  # Importieren Sie die Funktion send() aus Ihrem anderen Modul
+from send import send_npy_file
+import aiohttp
+import requests
 
 
 class App:
     def __init__(self, root):
+        self.token = login()
         self.root = root
         self.root.title("Gestura")
-        self.root.geometry("1000x1000")
+        self.root.geometry("1000x700")
 
         # Initialer Zustand des Buttons
         self.is_started = False
 
         # Textfeld erstellen (ca. 500 Pixel breit)
-        self.text_entry = tk.Entry(self.root, width=70)
-        self.text_entry.place(relx=0.5, rely=0.95, anchor='center')  # Positioniert am unteren Rand, zentriert
+        self.ErkennungAusgabe = tk.Entry(self.root, width=70)
+        self.ErkennungAusgabe.place(relx=0.5, rely=0.95, anchor='center')  # Positioniert am unteren Rand, zentriert
 
         # Start/Stop-Button erstellen
         self.start_stop_button = tk.Button(self.root, text="Start", command=self.toggle_button)
@@ -38,20 +41,20 @@ class App:
 
     # Funktion, die beim Drücken des Start-Buttons aufgerufen wird
     def on_start(self):
-        self.text_entry.delete(0, tk.END)
+        self.ErkennungAusgabe.delete(0, tk.END)
         self.stop_event.clear()  # Sicherstellen, dass das Event zurückgesetzt ist
         # Asynchronen Task starten
         asyncio.run_coroutine_threadsafe(self.run_send(), self.loop)
 
     # Funktion, die beim Drücken des Stop-Buttons aufgerufen wird
     def on_stop(self):
-        self.text_entry.delete(0, tk.END)
+        self.ErkennungAusgabe.delete(0, tk.END)
         # Stop-Event setzen, um die Schleife zu beenden
         self.stop_event.set()
 
     async def run_send(self):
         while not self.stop_event.is_set():
-            await send_npy_file()  # Hier wird die asynchrone Funktion send() aufgerufen
+            await send_npy_file(self.token)  # Hier wird die asynchrone Funktion send() aufgerufen
             await asyncio.sleep(1)  # Eine Sekunde warten
 
     # Funktion zum Umschalten des Buttons
@@ -75,7 +78,37 @@ class App:
         self.root.destroy()  # Fenster schließen
 
 
+
+
+
+
+def login():
+    url = "http://localhost:8080/login"  # Ersetze durch die tatsächliche URL
+    payload = {
+        "uname": "JPP",
+        "password": "Hallo"
+    }
+
+    # POST-Anfrage mit dem JSON-Payload senden
+    response = requests.post(url, json=payload)
+
+    # Prüfe auf erfolgreiche Antwort
+    if response.status_code == 200:
+        result = response.json()  # JSON-Response
+        print("Login successful:", result['token'])
+        return result['token']
+    else:
+        error = response.text
+        print("Login failed:", error)
+        return None  # Falls der Login fehlschlägt
+
+
+
+
+
 if __name__ == "__main__":
+
     root = tk.Tk()
     app = App(root)
     root.mainloop()
+
